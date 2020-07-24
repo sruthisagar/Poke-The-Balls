@@ -10,14 +10,9 @@ from pygame.draw import circle as draw_circle
 def main():
 
 	window=create_window()
-	clock=Clock()
+	game=create_game(window)
 
-	color=['blue','red']
-	radius=[40,30]
-	center=[[200,100],[50,50]]
-	velocity=[[2,1],[1,2]]
-
-	play_game(window, color, center, radius, velocity, clock)
+	play_game(game)
 	window.close()
 
 def create_window():
@@ -26,57 +21,74 @@ def create_window():
 	window.set_bg_color('black')
 	return window
 
-def create_game():
-	pass 
+def create_game(window):
 
-def create_dot():
-	pass
+	game=Game()
+	game.window=window
+	game.close_selected=False
+	game.small_dot=create_dot(window, 'red', [50,50], 30, [1,2])
+	game.big_dot=create_dot(window, 'blue', [200,100], 40, [2,1])
+	game.frame_rate=90
+	game.clock=Clock()
 
-def play_game(window, color, center, radius, velocity, clock):
+	return game
 
-	close_selected=False
+def create_dot(window, color, center, radius, velocity):
 
-	while not close_selected:
-		close_selected=handle_events()
-		draw_game(window, color, center, radius)
-		update_game(window, center, radius, velocity, clock)
+	dot=Dot()
+	dot.window=window
+	dot.color=color
+	dot.center=center
+	dot.radius=radius
+	dot.velocity=velocity
 
-def handle_events():
+	return dot
 
-	closed=False
+def play_game(game):
+
+	while not game.close_selected:
+		handle_events(game)
+		draw_game(game)
+		update_game(game)
+
+def handle_events(game):
+
 	event_list=get_events()
 	for event in event_list:
 		if event.type==QUIT:
-			closed=True
+			game.close_selected=True
 
-	return closed
+def draw_game(game):
 
-def draw_game(window, color, center, radius):
+	game.window.clear()
+	draw_dot(game.small_dot)
+	draw_dot(game.big_dot)
+	game.window.update()
 
-	window.clear()
-	draw_dot(window, color, center, radius)
-	window.update()
-
-def draw_dot(window, color_string, center, radius):
-
-	for index in range(0,2):
-		surface=window.get_surface()
-		color=Color(color_string[index])
-		draw_circle(surface, color, center[index], radius[index])
-
-def update_game(window, center, radius, velocity, clock):
-
-	frame_rate=90
-	move_dot(window, center[0], radius[0], velocity[0])
-	move_dot(window, center[1], radius[1], velocity[1])
-	clock.tick(frame_rate)
+def draw_dot(dot):
 	
-def move_dot(window, center, radius, velocity):
+	surface=dot.window.get_surface()
+	color=Color(dot.color)
+	draw_circle(surface, color, dot.center, dot.radius)
 
-	size=[window.get_width(), window.get_height()]
+def update_game(game):
+
+	move_dot(game.small_dot)
+	move_dot(game.big_dot)
+	game.clock.tick(game.frame_rate)
+	
+def move_dot(dot):
+
+	size=[dot.window.get_width(), dot.window.get_height()]
 	for index in range(0,2):
-		center[index]=center[index]+velocity[index]
-		if center[index]+radius >= size[index] or center[index]-radius <= 0:
-			velocity[index] = -velocity[index]
+		dot.center[index]=dot.center[index]+dot.velocity[index]
+		if (dot.center[index]+dot.radius >= size[index]) or (dot.center[index]-dot.radius <= 0):
+			dot.velocity[index] = -dot.velocity[index]
+
+class Game:
+	pass
+
+class Dot:
+	pass
 
 main()
