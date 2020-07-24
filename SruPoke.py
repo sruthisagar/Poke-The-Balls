@@ -12,112 +12,101 @@ from pygame.draw import circle as draw_circle
 
 def main():
 
-	window=create_window()
-	game=create_game(window)
-
-	play_game(game)
-	window.close()
-
-def create_window():
-
-	window=Window('Poke the Dots', 500, 400)
-	window.set_bg_color('black')
-	window.set_font_name('Times New Roman')
-	window.set_font_size(50)
-	window.set_font_color('white')
-	return window
-
-def create_game(window):
-
 	game=Game()
-	game.window=window
-	game.close_selected=False
-	game.small_dot=create_dot(window, 'red', [50,50], 30, [1,2])
-	game.big_dot=create_dot(window, 'blue', [200,100], 40, [2,1])
-	game.frame_rate=90
-	game.clock=Clock()
-	randomize_dot(game.small_dot)
-	randomize_dot(game.big_dot)
-	game.score=0
-
-	return game
-
-def create_dot(window, color, center, radius, velocity):
-
-	dot=Dot()
-	dot.window=window
-	dot.color=color
-	dot.center=center
-	dot.radius=radius
-	dot.velocity=velocity
-
-	return dot
-
-def play_game(game):
-
-	while not game.close_selected:
-		handle_events(game)
-		draw_game(game)
-		update_game(game)
-
-def handle_events(game):
-
-	event_list=get_events()
-	for event in event_list:
-		if event.type==QUIT:
-			game.close_selected=True
-		elif event.type==MOUSEBUTTONUP:
-			handle_mouse_click(game)
-
-def handle_mouse_click(game):
-
-	randomize_dot(game.small_dot)
-	randomize_dot(game.big_dot)
-
-def draw_game(game):
-
-	game.window.clear()
-	draw_score(game)
-	draw_dot(game.small_dot)
-	draw_dot(game.big_dot)
-	game.window.update()
-
-def draw_score(game):
-	
-	string='Score: ' + str(game.score)
-	game.window.draw_string(string, 0, 0)
-
-def draw_dot(dot):
-	
-	surface=dot.window.get_surface()
-	color=Color(dot.color)
-	draw_circle(surface, color, dot.center, dot.radius)
-
-def update_game(game):
-
-	move_dot(game.small_dot)
-	move_dot(game.big_dot)
-	game.clock.tick(game.frame_rate)
-	game.score=get_ticks() // 1000 #milliseconds to seconds
-	
-def move_dot(dot):
-
-	size=[dot.window.get_width(), dot.window.get_height()]
-	for index in range(0,2):
-		dot.center[index]=dot.center[index]+dot.velocity[index]
-		if (dot.center[index]+dot.radius >= size[index]) or (dot.center[index]-dot.radius <= 0):
-			dot.velocity[index] = -dot.velocity[index]
-
-def randomize_dot(dot):
-	
-	size=[dot.window.get_width(), dot.window.get_height()]
-	for index in range(0,2):
-		dot.center[index]=randint(dot.radius, size[index]-dot.radius)
+	game.play()
 
 class Game:
-	pass
+	
+	def __init__(self):
+
+		self.window=Window('Poke the Dots', 500, 400)
+		self.adjust_window()
+		self.close_selected=False
+		self.small_dot=Dot(self.window, 'red', [50,50], 30, [1,2])
+		self.big_dot=Dot(self.window, 'blue', [200,100], 40, [2,1])
+		self.frame_rate=90
+		self.clock=Clock()
+		self.small_dot.randomize()
+		self.big_dot.randomize()
+		self.score=0
+
+	def adjust_window(self):
+
+		self.window.set_bg_color('black')
+		self.window.set_font_name('Times New Roman')
+		self.window.set_font_size(50)
+		self.window.set_font_color('white')
+
+	def draw(self):
+
+		self.window.clear()
+		self.draw_score()
+		self.small_dot.draw()
+		self.big_dot.draw()
+		self.window.update()
+
+	def play(self):
+
+		while not self.close_selected:
+			self.handle_events()
+			self.draw()
+			self.update()
+		self.window.close()
+
+
+	def handle_events(self):
+
+		event_list=get_events()
+		for event in event_list:
+			if event.type==QUIT:
+				self.close_selected=True
+			elif event.type==MOUSEBUTTONUP:
+				self.handle_mouse_click()
+
+	def handle_mouse_click(self):
+
+		self.small_dot.randomize()
+		self.big_dot.randomize()
+
+	def draw_score(self):
+
+		string='Score: ' + str(self.score)
+		self.window.draw_string(string, 0, 0)
+
+	def update(self):
+
+		self.small_dot.move()
+		self.big_dot.move()
+		self.clock.tick(self.frame_rate)
+		self.score=get_ticks() // 1000 #milliseconds to seconds
+
 
 class Dot:
-	pass
+
+	def __init__(self, window, color, center, radius, velocity):
+		self.window=window
+		self.color=color
+		self.center=center
+		self.radius=radius
+		self.velocity=velocity
+
+	def draw(self):
+		surface=self.window.get_surface()
+		color=Color(self.color)
+		draw_circle(surface, color, self.center, self.radius)
+
+	def move(self):
+
+		size=[self.window.get_width(), self.window.get_height()]
+		for index in range(0,2):
+			self.center[index]=self.center[index]+self.velocity[index]
+			if (self.center[index]+self.radius >= size[index]) or (self.center[index]-self.radius <= 0):
+				self.velocity[index] = -self.velocity[index]
+
+	def randomize(self):
+		
+		size=[self.window.get_width(), self.window.get_height()]
+		for index in range(0,2):
+			self.center[index]=randint(self.radius, size[index]-self.radius)
 
 main()
